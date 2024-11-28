@@ -21,15 +21,15 @@ public:
     void postNodeData();
 
     static void configCallback(WiFiManager *manager);
-    static void onDataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
-    static void test();
-    
+    static void onDataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);    
 private:
     WiFiManager wifiManager;
     String state;
 
-    String inbound_mac;
-    String inbound_data;
+    String inbound_mac[10];
+    String inbound_data[10];
+    int inbound_index = 0;
+    int inbound_cap = 10;
 
     const char* SSID = "Environmental Node HUB";
     const char* password = "staging_password_123";

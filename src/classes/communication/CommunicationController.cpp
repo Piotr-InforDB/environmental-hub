@@ -88,28 +88,21 @@ void CommunicationController::stopConnected() {
 }
 
 void CommunicationController::setIncomingData(String mac, String data){
-    inbound_mac = mac;
-    inbound_data = data;
-}
+    inbound_mac[inbound_index] = mac;
+    inbound_data[inbound_index] = data;
 
-void CommunicationController::test(){
-    Serial.print("Local IP: ");
-    Serial.println(WiFi.localIP());
-    
-    HTTPClient http;
-    http.begin("https://environmental-nodes.meandthebois.com/api/node/submit");
-    int httpCode = http.POST("{\"hub\":\"FC:E8:C0:74:96:08\", \"node\":\"FC:E8:C0:74:7D:D8\",\"data\":{\"key\":\"light\", \"value\":\"35.00\"}}");
-
-    if (httpCode > 0) {
-        Serial.printf("HTTPS Status Code: %d\n", httpCode);
-        http.end();
-    } else {
-        Serial.printf("HTTPS Error: %s\n", http.errorToString(httpCode).c_str());
-        http.end();
-    }
+    inbound_index ++;
+    if(inbound_index >= inbound_cap){ inbound_index = 0; }
 }
 void CommunicationController::postNodeData() {
-    if(inbound_mac == ""){ return; }
+    int index = -1;
+    for(int i = 0; i < inbound_cap; i++){
+        if(inbound_mac[i] != ""){
+            index = i;
+            break;
+        }
+    }
+    if(index == -1){ return; }
 
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("Wi-Fi not connected. Cannot send data.");
@@ -118,14 +111,13 @@ void CommunicationController::postNodeData() {
 
     HTTPClient http;
     http.begin("https://environmental-nodes.meandthebois.com/api/node/submit");
-    // int httpResponseCode = http.POST("{\"hub\":\"FC:E8:C0:74:96:08\", \"node\":\"FC:E8:C0:74:7D:D8\",\"data\":{\"key\":\"light\", \"value\":\"35.00\"}}");
 
-    String payload = "{\"hub\":\"" + WiFi.macAddress() + "\", \"node\":\"" + inbound_mac + "\",\"data\":" + inbound_data + "}";
+    String payload = "{\"hub\":\"" + WiFi.macAddress() + "\", \"node\":\"" + inbound_mac[index] + "\",\"data\":" + inbound_data[index] + "}";
     Serial.print("Payload: ");
     Serial.println(payload);
 
-    inbound_mac = "";
-    inbound_data = "";
+    inbound_mac[index] = "";
+    inbound_data[index] = "";
 
     int httpResponseCode = http.POST(payload);
     if (httpResponseCode > 0) {

@@ -1,8 +1,10 @@
 #include "classes/communication/CommunicationController.h"
+#include "classes/leds/LedsController.h"
 #include <esp_now.h>
 
 
 CommunicationController communicationController;
+LedsController ledsController;
 
 void espIncomingData(const uint8_t* mac, const uint8_t* incomingData, int len) {
     char macStr[18];
@@ -15,10 +17,12 @@ void espIncomingData(const uint8_t* mac, const uint8_t* incomingData, int len) {
     Serial.println(message);
 
     communicationController.setIncomingData(node_mac, message);
+    ledsController.blinkConnection();
 }
 
 void setup() {
   Serial.begin(115200);
+  ledsController.show();
   communicationController.begin();
 
   if (esp_now_init() != ESP_OK) {
@@ -30,6 +34,8 @@ void setup() {
 }
 
 void loop() {
-  String state = communicationController.run();
+  String connection_state = communicationController.run();
+  ledsController.setConnection( connection_state );
+
   delay(500);
 }

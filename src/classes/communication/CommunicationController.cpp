@@ -7,7 +7,7 @@
 #define BUTTON_PIN 12
 
 CommunicationController::CommunicationController() {
-    state = "IDLE";
+    state = "CONFIG_PORTAL";
 }
 
 void CommunicationController::begin() {
@@ -21,20 +21,14 @@ void CommunicationController::begin() {
         Serial.println("Connected to Wi-Fi!");
         Serial.print("Local IP Address: ");
         Serial.println(WiFi.localIP());
-    } else {
-        Serial.println("Failed to connect. Configuration portal started.");
-        state = "CONFIG_PORTAL";
-        while (true) {
-            delay(1000);
-        }
     }
 }
 
 String CommunicationController::run() {
-    static bool lastButtonState = HIGH;
-    bool currentButtonState = digitalRead(BUTTON_PIN);
+    if(state == "CONFIG_PORTAL"){ return state; }
 
-    if (currentButtonState == LOW && lastButtonState == HIGH) {
+    bool current_button_state = digitalRead(BUTTON_PIN);
+    if (current_button_state == LOW && last_button_state == HIGH) {
         if (state == "HOTSPOT") {
             stopAP();
             startConnected();
@@ -46,7 +40,7 @@ String CommunicationController::run() {
 
     postNodeData();
 
-    lastButtonState = currentButtonState;
+    last_button_state = current_button_state;
     return state;
 }
 

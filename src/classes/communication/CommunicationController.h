@@ -31,6 +31,8 @@ private:
     int inbound_index = 0;
     int inbound_cap = 10;
 
+    bool last_button_state = LOW;
+
     const char* SSID = "Environmental Node HUB";
     const char* password = "staging_password_123";
 };

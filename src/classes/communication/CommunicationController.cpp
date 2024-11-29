@@ -14,7 +14,6 @@ void CommunicationController::begin() {
     pinMode(BUTTON_PIN, INPUT_PULLUP);
 
     WiFi.mode(WIFI_AP_STA);
-    wifiManager.setAPCallback(CommunicationController::configCallback);
 
     if (wifiManager.autoConnect("Environmental Node HUB Config", password)) {
         state = "CONNECTED";
@@ -31,10 +30,12 @@ String CommunicationController::run() {
     if (current_button_state == LOW && last_button_state == HIGH) {
         if (state == "HOTSPOT") {
             stopAP();
+            stopBLE();
             startConnected();
         } else {
             stopConnected();
             startAP();
+            startBLE();
         }
     }
 
@@ -57,6 +58,36 @@ void CommunicationController::startAP() {
 void CommunicationController::stopAP() {
     WiFi.softAPdisconnect(true);
     Serial.println("HOTSPOT mode disabled");
+}
+
+void CommunicationController::startBLE() {
+    NimBLEDevice::init("Environmental Node Hub");
+    NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+
+    pServer = NimBLEDevice::createServer();
+
+    pService = pServer->createService(BLE_SERVICE_UUID);
+
+    pCharacteristic = pService->createCharacteristic(
+        BLE_CHARACTERISTICS_UUID,
+        NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY
+    );
+
+    String macAddress = WiFi.macAddress();
+    pCharacteristic->setValue(macAddress.c_str());
+
+    pService->start();
+
+    NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(BLE_SERVICE_UUID);
+    pAdvertising->setScanResponse(true);
+    pAdvertising->start();
+
+    Serial.println("BLE started");
+}
+void CommunicationController::stopBLE() {
+    NimBLEDevice::deinit(true);
+    Serial.println("BLE stopped");
 }
 
 void CommunicationController::startConnected() {
@@ -123,12 +154,4 @@ void CommunicationController::postNodeData() {
     }
 
     http.end();
-}
-
-void CommunicationController::configCallback(WiFiManager* manager) {
-    Serial.println("Entered configuration mode");
-    Serial.print("Config Portal IP Address: ");
-    Serial.println(WiFi.softAPIP());
-    Serial.print("Portal SSID: ");
-    Serial.println(manager->getConfigPortalSSID());
 }

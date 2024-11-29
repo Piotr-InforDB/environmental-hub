@@ -27,20 +27,20 @@ void LedsController::blinkConnection(){
     leds[0] = 0x000000;
     FastLED.show();
 
-    delay(25);
+    delay(50);
     show();
 }
 
 void LedsController::show(){
 
     if(connection_state == "CONFIG_PORTAL"){
-        leds[0] = CRGB(50, 0, 50);
+        leds[0] = CRGB(25, 0, 25);
     }
     else if(connection_state == "CONNECTED"){
-        leds[0] = CRGB(0, 50, 0);
+        leds[0] = CRGB(0, 25, 0);
     }
     else if(connection_state == "HOTSPOT"){
-        leds[0] = CRGB(0, 0, 50);
+        leds[0] = CRGB(0, 0, 25);
     }
     else{
         leds[0] = CRGB(0, 0, 0);
